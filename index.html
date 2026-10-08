@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DEMの色の読み方 — Terrarium / Terrain-RGB / 地理院標高タイル</title>
+  <meta name="description" content="DEMの画素値（DN）をRGB 3チャンネルにどう詰めるか。Terrarium・Terrain-RGB・地理院標高タイルを同じ画面で比べる教育用ウェブアプリ。">
+  <meta name="theme-color" content="#0e1116">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body data-mode="student">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="5" rx="1.5" fill="#2dd4bf"/><rect x="2" y="9.5" width="20" height="5" rx="1.5" fill="#f5a524"/><rect x="2" y="16" width="20" height="5" rx="1.5" fill="#ff5a36"/></svg>
+      <h1>DEMの色の読み方</h1>
+      <p class="subcopy">1ピクセルのRGBが、なぜメートルになるのか</p>
+    </div>
+    <div class="top-right">
+      <button class="check" id="checkBtn" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="check-dot"></span><span id="checkText">検算中…</span></button>
+      <div class="seg" id="modeSeg" role="group" aria-label="表示モード">
+        <button type="button" data-mode="student" aria-pressed="true">高校生モード</button>
+        <button type="button" data-mode="full" aria-pressed="false">式を全部見る</button>
+      </div>
+    </div>
+    <div class="check-pop" id="checkPop" role="dialog" aria-label="検算の結果" hidden></div>
+  </header>
+
+  <div class="layout">
+    <aside class="panel controls" id="controls" aria-label="操作パネル">
+      <div class="ctl-head">
+        <span class="eyebrow">操作中の方式</span>
+        <strong id="activeName">Terrarium</strong>
+      </div>
+
+      <section class="ctl-block">
+        <div class="ctl-title"><span>標高 h</span><span class="muted" id="hSub"></span></div>
+        <div class="h-read mono" id="hRead" aria-live="off">0 m</div>
+        <input class="slider" id="hSlider" type="range" min="-11000" max="9000" step="0.01" aria-label="標高スライダー">
+        <div class="slider-scale mono"><span>−11000</span><span>0</span><span>9000 m</span></div>
+        <div class="row">
+          <input class="num mono" id="hNum" type="number" step="any" inputmode="decimal" aria-label="標高を数値で入力">
+          <span class="unit">m</span>
+          <div class="seg small" id="stepSeg" role="group" aria-label="スライダーの刻み">
+            <button type="button" data-step="0.01" aria-pressed="true">0.01 m</button>
+            <button type="button" data-step="1" aria-pressed="false">1 m</button>
+          </div>
+        </div>
+        <label class="switch" data-tip="ONのあいだ、どれかを動かすと他の方式も同じ標高に合わせてRGBを計算し直します。">
+          <input type="checkbox" id="align" checked><span class="knob"></span><span>標高を揃える</span>
+        </label>
+      </section>
+
+      <section class="ctl-block">
+        <div class="ctl-title"><span>RGB（0〜255）</span><span class="muted">動かした側が主</span></div>
+        <div class="rgb-row" data-ch="R"><span class="ch">R</span><input class="slider ch-slider" type="range" min="0" max="255" step="1" aria-label="R"><input class="num mono" type="number" min="0" max="255" step="1" aria-label="R の値"></div>
+        <div class="rgb-row" data-ch="G"><span class="ch">G</span><input class="slider ch-slider" type="range" min="0" max="255" step="1" aria-label="G"><input class="num mono" type="number" min="0" max="255" step="1" aria-label="G の値"></div>
+        <div class="rgb-row" data-ch="B"><span class="ch">B</span><input class="slider ch-slider" type="range" min="0" max="255" step="1" aria-label="B"><input class="num mono" type="number" min="0" max="255" step="1" aria-label="B の値"></div>
+        <div class="x-read mono" id="xRead"></div>
+      </section>
+
+      <section class="ctl-block">
+        <div class="btn-row">
+          <button class="btn" type="button" id="copyColor">この色をコピー</button>
+          <button class="btn" type="button" id="copyFormula">数式をコピー</button>
+        </div>
+      </section>
+
+      <section class="ctl-block">
+        <div class="ctl-title"><span>例を読み込む</span><span class="muted">検算用</span></div>
+        <div class="examples" id="examples"></div>
+      </section>
+
+      <p class="keys muted">キー操作：<kbd>←</kbd><kbd>→</kbd> で分解能ずつ、<kbd>Shift</kbd> を押しながらで 1 m ずつ。</p>
+    </aside>
+
+    <div class="stage">
+      <p class="lead">
+        <span class="term" tabindex="0" data-tip="Digital Elevation Model。地面の高さを格子状に並べたデータ。">DEM</span>
+        の 1 画素に入っている数（<span class="term" tabindex="0" data-tip="Digital Number。標高そのものではなく、画素に入っている整数。以降は DN と書きます。">DN値</span>）は、24bit の整数 <span class="mono">x</span> です。
+        標高タイルは、この <span class="mono">x</span> を R・G・B に 8bit ずつ詰めて画像にしています。詰め方は方式ごとに違います。
+      </p>
+
+      <section id="cards" class="cards" aria-label="3方式の比較"></section>
+
+      <section class="block" aria-labelledby="gh">
+        <div class="block-head">
+          <h2 id="gh">x と標高の関係</h2>
+          <p class="muted">横軸は DN の x（0〜16777215）、縦軸は標高。グラフをクリック／ドラッグするとその x を読み込みます。</p>
+        </div>
+        <div class="graphs" id="graphs"></div>
+      </section>
+
+      <section class="block" aria-labelledby="ch">
+        <div class="block-head">
+          <h2 id="ch">同じ標高なら、色はこう違う</h2>
+          <p class="muted">マスをクリックすると、その方式にその標高を読み込みます。</p>
+        </div>
+        <div class="compare" id="compare"></div>
+        <div class="sweep-head">
+          <h3>標高を連続して動かしたときの色</h3>
+          <div class="seg small" id="sweepSeg" role="group" aria-label="スイープの範囲"></div>
+        </div>
+        <div class="sweep" id="sweep"></div>
+        <p class="note" id="compareNote"></p>
+      </section>
+
+      <section class="block" aria-labelledby="mh">
+        <div class="block-head">
+          <h2 id="mh">本物の標高タイルで試す</h2>
+          <p class="muted">Mapterhorn の標高タイル（Terrarium 形式）を MapLibre GL JS で表示しています。地図をクリックすると、その地点の画素の RGB を読み込みます。</p>
+        </div>
+        <div class="mapwrap">
+          <div class="map" id="map" role="application" aria-label="標高タイルの地図"><div class="map-msg" id="mapMsg">地図を読み込み中…</div></div>
+          <div class="map-info" id="mapInfo">
+            <div class="ctl-title"><span>選んだ画素</span></div>
+            <div class="mi-place" id="miPlace">富士山の山頂付近</div>
+            <div class="mi-coord mono" id="miCoord"></div>
+            <div class="mi-sw" id="miSw"></div>
+            <div class="mi-rgb mono" id="miRgb">—</div>
+            <div class="mi-h mono" id="miH">—</div>
+            <div class="btn-row col">
+              <button class="btn primary" type="button" id="miLoad" disabled>この画素を読み込む</button>
+              <button class="btn" type="button" id="miHome">富士山頂に戻る</button>
+              <label class="switch small"><input type="checkbox" id="mi3d" checked><span class="knob"></span><span>3D 表示</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="wh">
+        <div class="block-head"><h2 id="wh">なぜ標高を RGB に詰めるのか</h2></div>
+        <div class="why-grid">
+          <article><h3>普通の画像として読める</h3><p>ブラウザも GPU も、PNG や WebP の画像ならそのまま扱えます。標高専用の形式を用意しなくて済みます。</p></article>
+          <article><h3>PNG で圧縮できる</h3><p>可逆圧縮の画像形式なら、値を壊さずにデータを小さくできます。</p></article>
+          <article><h3>タイル地図と同じ配信</h3><p>地図画像と同じ z/x/y のタイルとして配れるので、既存のタイル配信の仕組みに載せられます。</p></article>
+          <article class="res"><h3>分解能（DN 1つぶんの標高差）</h3>
+            <dl class="mono">
+              <div><dt style="--c:#2dd4bf">Terrarium</dt><dd>1/256 m ≈ 0.0039 m</dd></div>
+              <div><dt style="--c:#f5a524">Terrain-RGB</dt><dd>0.1 m</dd></div>
+              <div><dt style="--c:#ff5a36">地理院</dt><dd>0.01 m</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="sources">
+    <h2>出典（式）</h2>
+    <ul class="mono">
+      <li><b style="--c:#2dd4bf">Terrarium</b><span>(R*256 + G + B/256) - 32768</span></li>
+      <li><b style="--c:#f5a524">Terrain-RGB</b><span>-10000 + ((R*256*256 + G*256 + B)*0.1)</span></li>
+      <li><b style="--c:#ff5a36">地理院</b><span>x = 2^16 R + 2^8 G + B、u = 0.01、x = 2^23 が無効、x &gt; 2^23 は x - 2^24</span></li>
+    </ul>
+    <p class="muted">
+      参考：
+      <a href="https://github.com/tilezen/joerd/blob/master/docs/formats.md" target="_blank" rel="noreferrer">Tilezen Joerd formats</a> ・
+      <a href="https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/" target="_blank" rel="noreferrer">Mapbox Terrain-RGB</a> ・
+      <a href="https://maps.gsi.go.jp/development/demtile.html" target="_blank" rel="noreferrer">国土地理院 標高タイル</a> ・
+      <a href="https://mapterhorn.com/" target="_blank" rel="noreferrer">Mapterhorn</a>（地図の標高データ）
+    </p>
+  </footer>
+
+  <div id="tip" class="tip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
