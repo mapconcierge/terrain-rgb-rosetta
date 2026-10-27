@@ -400,6 +400,7 @@ function renderControls() {
   ctl.step.forEach((b2) => b2.setAttribute('aria-pressed', String(Number(b2.dataset.step) === S.step)));
   ctl.hSlider.step = String(S.step);
   ctl.align.checked = S.align;
+  ctl.emblem.forEach((el) => el.classList.toggle('on', ((x >> Number(el.dataset.bit)) & 1) === 1));
   sweep?.setCursor(S.h);
 }
 
@@ -416,6 +417,7 @@ function buildControls() {
   ctl.hSlider = $('#hSlider');
   ctl.hNum = $('#hNum');
   ctl.xRead = $('#xRead');
+  ctl.emblem = $$('.emblem .eb');
   ctl.align = $('#align');
   ctl.step = $$('#stepSeg button');
   ctl.rows = $$('.rgb-row').map((row) => ({ slider: $('input[type=range]', row), num: $('input[type=number]', row) }));

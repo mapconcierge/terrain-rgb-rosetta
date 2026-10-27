@@ -1,4 +1,4 @@
-# terrain-rgb-rosetta
+# Terrain RGB Rosetta
 
 DEM の画素値（DN）を RGB にどう詰めるかを、Terrarium / Terrain-RGB / 地理院標高タイルで比べる教育用シングルページアプリ。
 

@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+
 const workerSrc = new URL('./node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url);
 
 const maplibreWorker = () => ({
@@ -10,8 +12,13 @@ const maplibreWorker = () => ({
   },
 });
 
+const injectVersion = () => ({
+  name: 'inject-version',
+  transformIndexHtml: (html) => html.replaceAll('__APP_VERSION__', version),
+});
+
 export default defineConfig({
   base: './',
-  plugins: [maplibreWorker()],
+  plugins: [maplibreWorker(), injectVersion()],
   build: { outDir: 'dist', chunkSizeWarningLimit: 1500 },
 });
