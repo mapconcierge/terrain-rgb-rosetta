@@ -39,18 +39,48 @@ kbd {
 }
 :focus-visible { outline: 2px solid #8fb4ff; outline-offset: 2px; }
 
-/* top bar */
-.topbar {
-  position: sticky; top: 0; z-index: 30;
-  height: 52px; padding: 0 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  background: var(--bg); border-bottom: 1px solid var(--line);
+/* hero */
+.hero { position: relative; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--line); }
+.hero-bar { display: grid; grid-template-columns: repeat(3, 1fr); height: 3px; }
+.hero-bar i:nth-child(1) { background: var(--c-terrarium); }
+.hero-bar i:nth-child(2) { background: var(--c-terrainrgb); }
+.hero-bar i:nth-child(3) { background: var(--c-gsi); }
+.hero-in {
+  max-width: 1500px; margin: 0 auto; padding: 28px 20px 26px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px 32px; flex-wrap: wrap;
 }
-.brand { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
-.brand .logo { width: 20px; height: 20px; align-self: center; flex: none; }
-.brand h1 { font-size: 16px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
-.subcopy { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top-right { display: flex; align-items: center; gap: 12px; flex: none; }
+.brand { display: flex; align-items: center; gap: 22px; min-width: 0; }
+.emblem-wrap { flex: none; display: block; line-height: 0; }
+.emblem { width: 104px; height: auto; display: block; }
+.emblem .stone { fill: #12161c; stroke: #323b49; stroke-width: 1.5; }
+.emblem .eb { opacity: .14; transition: opacity var(--dur); }
+.emblem .eb.on { opacity: 1; }
+.emblem .eb.r { fill: #ef6b78; }
+.emblem .eb.g { fill: #5fd18a; }
+.emblem .eb.b { fill: #6aa2ff; }
+.wm { display: grid; gap: 8px; min-width: 0; }
+.wm h1 {
+  font-size: clamp(30px, 4.8vw, 60px); line-height: 1.02; font-weight: 800; letter-spacing: -.03em;
+  color: #f1f4f9; white-space: nowrap;
+}
+.wm .w-t { font-weight: 300; letter-spacing: -.02em; }
+.wm .w-rgb i { font-style: normal; }
+.wm .w-rgb i:nth-child(1) { color: #ef6b78; }
+.wm .w-rgb i:nth-child(2) { color: #5fd18a; }
+.wm .w-rgb i:nth-child(3) { color: #6aa2ff; }
+.wm-sub { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.subcopy { color: var(--muted); font-size: 14px; letter-spacing: .02em; }
+.ver {
+  flex: none; font-size: 12px; color: var(--text); border: 1px solid var(--line-2); border-radius: 999px;
+  padding: 1px 10px; background: #12161c; letter-spacing: .04em;
+}
+.top-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.gh {
+  display: inline-flex; align-items: center; gap: 7px; color: var(--muted); text-decoration: none; font-size: 12.5px;
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 12px 4px 10px; background: #12161c;
+}
+.gh:hover { color: var(--text); }
+.gh svg { width: 15px; height: 15px; }
 
 .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; padding: 2px; background: #12161c; }
 .seg button {
@@ -73,7 +103,7 @@ kbd {
 .check.ng { color: #ffb4a3; border-color: #7a3a2e; }
 .check.ng .check-dot { background: var(--c-gsi); }
 .check-pop {
-  position: absolute; right: 20px; top: 56px; width: min(520px, calc(100vw - 32px));
+  position: absolute; right: 20px; top: calc(100% - 8px); z-index: 40; width: min(520px, calc(100vw - 32px));
   background: var(--card); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, .5);
 }
@@ -99,13 +129,13 @@ kbd {
 
 /* controls */
 .controls {
-  position: sticky; top: 72px; padding: 16px; display: grid; gap: 0;
-  max-height: calc(100vh - 88px); overflow: auto; scrollbar-width: thin;
+  position: sticky; top: 16px; padding: 16px; display: grid; gap: 0;
+  max-height: calc(100vh - 32px); overflow: auto; scrollbar-width: thin;
 }
 .ctl-head { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .eyebrow { font-size: 11px; color: var(--muted); letter-spacing: .06em; }
 .ctl-head strong { color: var(--accent, var(--text)); font-size: 15px; }
-.ctl-block { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.ctl-block { align-content: start; padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
 .ctl-block:last-of-type { border-bottom: 0; }
 .ctl-title { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); }
 .ctl-title > span:first-child { color: var(--text); font-weight: 600; font-size: 13px; }
@@ -150,7 +180,7 @@ kbd {
 .switch input:focus-visible + .knob { outline: 2px solid #8fb4ff; outline-offset: 2px; }
 .switch.small { font-size: 12.5px; }
 
-.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
 .btn-row.col { grid-template-columns: 1fr; }
 .btn {
   background: #1f2530; border: 1px solid var(--line-2); border-radius: 7px; padding: 7px 10px; cursor: pointer;
@@ -376,7 +406,6 @@ body[data-mode="full"] .f-student { display: none; }
   .controls .ctl-block { border-bottom: 0; border-top: 1px solid var(--line); }
   .controls .keys { grid-column: 1 / -1; }
   .controls .ctl-block:nth-of-type(3), .controls .ctl-block:nth-of-type(4) { grid-column: auto; }
-  .subcopy { display: none; }
 }
 @media (max-width: 899px) {
   .card-b { grid-template-columns: 1fr; }
@@ -391,11 +420,13 @@ body[data-mode="full"] .f-student { display: none; }
 }
 @media (max-width: 640px) {
   .controls { grid-template-columns: 1fr; }
-  .topbar { padding: 0 12px; }
+  .hero-in { padding: 20px 12px; }
+  .emblem { width: 64px; }
+  .brand { gap: 14px; }
+  .wm h1 { white-space: normal; }
   .layout { padding: 12px; }
   .bits { grid-template-columns: 1fr; }
   .why-grid { grid-template-columns: 1fr; }
-  .brand h1 { font-size: 14px; }
   .seg button { padding: 5px 8px; font-size: 12px; }
   .check span#checkText { display: none; }
 }
